@@ -84,4 +84,12 @@ export class EndpointRepository {
   }
 }
 
-export const endpointRepository = new EndpointRepository(); 
+// Lazy initialization to avoid database connection timing issues
+let _endpointRepository: EndpointRepository | null = null;
+
+export const getEndpointRepository = (): EndpointRepository => {
+  if (!_endpointRepository) {
+    _endpointRepository = new EndpointRepository();
+  }
+  return _endpointRepository;
+}; 

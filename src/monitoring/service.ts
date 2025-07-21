@@ -1,7 +1,7 @@
 import * as cron from 'node-cron';
 import { slackApp } from '../slack/app';
-import { endpointRepository } from '../database/repos/endpoint';
-import { versionRepository } from '../database/repos/version';
+import { getEndpointRepository } from '../database/repos/endpoint';
+import { getVersionRepository } from '../database/repos/version';
 import { fetchApiSpec } from '../watcher/fetcher';
 import { compareSpecs } from '../watcher/diff';
 import { sha256 } from '../common/crypto';
@@ -35,7 +35,7 @@ export class MonitoringService {
   }
 
   private async checkAllEndpoints(): Promise<void> {
-    const endpoints = await endpointRepository.findAllEnabled();
+    const endpoints = await getEndpointRepository().findAllEnabled();
     console.log(`Checking ${endpoints.length} endpoints...`);
 
     const promises = endpoints.map(endpoint => this.checkEndpoint(endpoint));
@@ -56,16 +56,16 @@ export class MonitoringService {
 
       console.log(`Changes detected for ${endpoint.url}`);
 
-      const previousVersion = await versionRepository.findLatest(endpoint._id!);
+      const previousVersion = await getVersionRepository().findLatest(endpoint._id!);
       let diff: OpenApiDiffResult | null = null;
 
       if (previousVersion) {
         diff = await compareSpecs(previousVersion.json, currentSpec);
       }
 
-      await versionRepository.store(endpoint._id!, currentHash, currentSpec);
-      await endpointRepository.updateHash(endpoint._id!, currentHash);
-      await versionRepository.enforceLimit(endpoint._id!);
+      await getVersionRepository().store(endpoint._id!, currentHash, currentSpec);
+      await getEndpointRepository().updateHash(endpoint._id!, currentHash);
+      await getVersionRepository().enforceLimit(endpoint._id!);
 
       await this.notifyChannels(endpoint.channels, diff, endpoint.url);
 

@@ -1,5 +1,5 @@
 import { slackApp } from './app';
-import { endpointRepository } from '../database/repos/endpoint';
+import { getEndpointRepository } from '../database/repos/endpoint';
 import { isValidUrl } from '../common/validation';
 import { formatEndpointList } from '../common/formatting';
 
@@ -31,7 +31,7 @@ export function registerCommands(): void {
             return;
           }
 
-          await endpointRepository.add(url, channelId);
+          await getEndpointRepository().add(url, channelId);
           await respond({
             text: `✅ Started monitoring \`${url}\` in this channel.`,
             response_type: 'ephemeral',
@@ -50,7 +50,7 @@ export function registerCommands(): void {
             return;
           }
 
-          const removed = await endpointRepository.remove(url, channelId);
+          const removed = await getEndpointRepository().remove(url, channelId);
           if (removed) {
             await respond({
               text: `✅ Stopped monitoring \`${url}\` in this channel.`,
@@ -66,7 +66,7 @@ export function registerCommands(): void {
         }
 
         case 'list': {
-          const endpoints = await endpointRepository.findByChannel(channelId);
+          const endpoints = await getEndpointRepository().findByChannel(channelId);
           const message = formatEndpointList(endpoints);
           await respond({
             text: message,

@@ -66,4 +66,12 @@ export class VersionRepository {
   }
 }
 
-export const versionRepository = new VersionRepository(); 
+// Lazy initialization to avoid database connection timing issues
+let _versionRepository: VersionRepository | null = null;
+
+export const getVersionRepository = (): VersionRepository => {
+  if (!_versionRepository) {
+    _versionRepository = new VersionRepository();
+  }
+  return _versionRepository;
+}; 
