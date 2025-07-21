@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 export async function fetchApiSpec(url: string): Promise<object> {
   const response = await fetch(url, {
     headers: {

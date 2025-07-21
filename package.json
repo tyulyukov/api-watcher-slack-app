@@ -15,7 +15,6 @@
     "openapi-diff": "^0.23.7",
     "mongodb": "^6.3.0",
     "node-cron": "^3.0.3",
-    "node-fetch": "^3.3.2",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
