@@ -63,6 +63,8 @@ export class MonitoringService {
         diff = await compareSpecs(previousVersion.json, currentSpec);
       }
 
+      console.log(`Diff: `, diff);
+
       await getVersionRepository().store(endpoint._id!, currentHash, currentSpec);
       await getEndpointRepository().updateHash(endpoint._id!, currentHash);
       await getVersionRepository().enforceLimit(endpoint._id!);
