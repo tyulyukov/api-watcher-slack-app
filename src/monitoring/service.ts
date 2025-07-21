@@ -49,38 +49,54 @@ export class MonitoringService {
       const currentSpec = await fetchApiSpec(endpoint.url);
       const currentHash = sha256(JSON.stringify(currentSpec));
 
-      if (currentHash === endpoint.lastHash) {
+      // Check if this is the first fetch
+      const isFirstFetch = !endpoint.lastHash;
+      
+      if (!isFirstFetch && currentHash === endpoint.lastHash) {
         console.log(`No changes detected for ${endpoint.url}`);
         return;
       }
 
-      console.log(`Changes detected for ${endpoint.url}`);
+      if (isFirstFetch) {
+        console.log(`First fetch for endpoint: ${endpoint.url} - establishing baseline`);
+      } else {
+        console.log(`Changes detected for ${endpoint.url}`);
+      }
 
       const previousVersion = await getVersionRepository().findLatest(endpoint._id!);
       let diff: OpenApiDiffResult | null = null;
 
-      if (previousVersion) {
+      if (previousVersion && !isFirstFetch) {
         diff = await compareSpecs(previousVersion.json, currentSpec);
+        console.log(`Diff: ${JSON.stringify(diff, null, 2)}`);
+      } else {
+        console.log(`No previous version found - this is ${isFirstFetch ? 'first fetch' : 'a new baseline'}`);
       }
 
-      console.log(`Diff: `, diff);
+      console.log(`Diff: ${JSON.stringify(diff, null, 2)}`);
 
       await getVersionRepository().store(endpoint._id!, currentHash, currentSpec);
       await getEndpointRepository().updateHash(endpoint._id!, currentHash);
       await getVersionRepository().enforceLimit(endpoint._id!);
 
-      await this.notifyChannels(endpoint.channels, diff, endpoint.url);
+      // Always notify on first fetch or when changes are detected
+      if (isFirstFetch || diff) {
+        await this.notifyChannels(endpoint.channels, diff, endpoint.url, isFirstFetch);
+      }
 
-      console.log(`Successfully processed changes for ${endpoint.url}`);
+      console.log(`Successfully processed ${isFirstFetch ? 'first fetch' : 'changes'} for ${endpoint.url}`);
     } catch (error) {
+      // On error, only log - do NOT notify channels
       console.error(`Error checking endpoint ${endpoint.url}:`, error);
+      console.log(`Skipping notification for ${endpoint.url} due to error`);
     }
   }
 
   private async notifyChannels(
     channels: string[],
     diff: OpenApiDiffResult | null,
-    url: string
+    url: string,
+    isFirstFetch: boolean = false
   ): Promise<void> {
     const blocks = renderDiffBlocks(diff, url);
 
@@ -91,7 +107,8 @@ export class MonitoringService {
           blocks,
         });
 
-        if (diff && JSON.stringify(diff).length >= 2900) {
+        // Only upload full diff as file if it's not a first fetch and diff is large
+        if (!isFirstFetch && diff && JSON.stringify(diff).length >= 2900) {
           await slackApp.client.files.upload({
             channels: channelId,
             content: JSON.stringify(diff, null, 2),
