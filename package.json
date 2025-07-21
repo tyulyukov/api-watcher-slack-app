@@ -1,14 +1,36 @@
 {
   "name": "api-watcher-slack-app",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
+  "description": "Slack app that monitors OpenAPI/Swagger endpoints for changes",
+  "main": "dist/app.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "dev": "tsx watch src/app.ts",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@slack/bolt": "^3.17.1",
+    "openapi-diff": "^0.23.7",
+    "mongodb": "^6.3.0",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.3.1"
+  },
   "devDependencies": {
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "@types/node": "^20.10.6",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.7.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/parser": "^6.18.1",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "private": true
 }
