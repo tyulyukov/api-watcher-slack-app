@@ -73,8 +73,6 @@ export class MonitoringService {
         console.log(`No previous version found - this is ${isFirstFetch ? 'first fetch' : 'a new baseline'}`);
       }
 
-      console.log(`Diff: ${JSON.stringify(diff, null, 2)}`);
-
       await getVersionRepository().store(endpoint._id!, currentHash, currentSpec);
       await getEndpointRepository().updateHash(endpoint._id!, currentHash);
       await getVersionRepository().enforceLimit(endpoint._id!);
